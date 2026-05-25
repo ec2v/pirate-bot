@@ -1,0 +1,10 @@
+services:
+  - type: worker
+    name: pirate-scripts-bot
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python key_generator_bot.py
+    envVars:
+      - key: DISCORD_TOKEN
+        value: ${DISCORD_TOKEN}
