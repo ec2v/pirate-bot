@@ -29,7 +29,7 @@ OWNER_ID = 1460529634117550121
 BOT_TOKEN = os.getenv("DISCORD_TOKEN", "")
 if not BOT_TOKEN:
     raise ValueError("DISCORD_TOKEN não definida! Configure a variável de ambiente.")
-DATABASE_FILE = "/home/ubuntu/pirate_bot/pirate_keys.db"
+DATABASE_FILE = "/tmp/pirate_keys.db"
 BANNER_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663693040824/BUQsYbGzBioWOJaK.png"
 
 # Cores padrão do bot
@@ -288,9 +288,12 @@ class KeyValidationHandler(BaseHTTPRequestHandler):
         pass
 
 def start_http_server():
-    server = HTTPServer(("0.0.0.0", 8080), KeyValidationHandler)
-    print("🌐 API HTTP rodando na porta 8080")
-    server.serve_forever()
+    try:
+        server = HTTPServer(("0.0.0.0", 8080), KeyValidationHandler)
+        print("🌐 API HTTP rodando na porta 8080")
+        server.serve_forever()
+    except Exception as e:
+        print(f"⚠️ Erro ao iniciar API HTTP: {e}")
 
 # ============================================================
 # BOT DISCORD
@@ -1492,13 +1495,23 @@ async def status_bot(interaction: discord.Interaction):
 # ============================================================
 
 if __name__ == "__main__":
-    # Inicializar banco de dados
-    init_database()
-    print("✅ Banco de dados inicializado!", flush=True)
+    try:
+        # Inicializar banco de dados
+        init_database()
+        print("✅ Banco de dados inicializado!", flush=True)
 
-    # Iniciar API HTTP em thread separada
-    http_thread = threading.Thread(target=start_http_server, daemon=True)
-    http_thread.start()
+        # Iniciar API HTTP em thread separada (opcional)
+        try:
+            http_thread = threading.Thread(target=start_http_server, daemon=True)
+            http_thread.start()
+        except Exception as e:
+            print(f"⚠️ API HTTP desabilitada: {e}")
 
-    # Iniciar bot Discord
-    bot.run(BOT_TOKEN)
+        # Iniciar bot Discord
+        print(f"🚀 Iniciando bot com token...", flush=True)
+        bot.run(BOT_TOKEN)
+    except Exception as e:
+        print(f"❌ ERRO CRÍTICO: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        exit(1)
